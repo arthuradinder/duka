@@ -1,17 +1,62 @@
-POST http://127.0.0.1:8000/signup 
-Content-Type: application/json
+@baseUrl = http://127.0.0.1:8000
+@contentType = application/json
+@authToken = xxx
 
-{ "username": "adam", "password": "Pass1234!", "email": "adam@mail.com" }
+### Sign Up
+POST {{baseUrl}}/auth/signup/
+Content-Type: {{contentType}}
 
-###
+{
+    "email": "davie@mail.com",
+    "password": "Pass123456!",
+    "username": "davie",
+    "phone_number": "+254712345678",
+    "address": "Nairobi, Kenya"
+}
 
-POST http://127.0.0.1:8000/login 
-Content-Type: application/json
 
-{ "username": "adam", "password": "Pass1234!" }
+### Login
+POST {{baseUrl}}/auth/login/
+Content-Type: {{contentType}}
 
-###
+{
+    "username": "arthur",
+    "password": "Pass123!",
+    "email": "arthur@mail.com"
+}
 
-GET http://127.0.0.1:8000/test_token 
-Content-Type: application/json
-Authorization: token xxx
+### Test Token Authentication
+GET {{baseUrl}}/auth/test_token/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}
+
+### Invalid Login Test
+POST {{baseUrl}}/auth/login/
+Content-Type: {{contentType}}
+
+{
+    "username": "wronguser",
+    "password": "wrongpass"
+}
+
+### Test Without Token (Should Return 401)
+GET {{baseUrl}}/auth/test_token/
+Content-Type: {{contentType}}
+
+### Optional: Sign Up with Full User Details
+POST {{baseUrl}}/auth/signup/
+Content-Type: {{contentType}}
+
+{
+    "username": "adam2",
+    "password": "Pass1234!",
+    "email": "adam2@mail.com",
+    "first_name": "Adam",
+    "last_name": "Smith"
+}
+
+### Test Token After Login
+# Remember to replace {{authToken}} with the token received from login response
+GET {{baseUrl}}/auth/test_token/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}
