@@ -12,6 +12,14 @@ class TimestampedSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
 
+class StockUpdateSerializer(serializers.Serializer):
+    """
+    Serializer for updating product stock.
+    """
+    class Meta:
+        model = Product
+        fields = ['id','stock']
+
 class UserSerializer(serializers.ModelSerializer):
     """
     Serializer for User model with additional validation.
@@ -27,6 +35,8 @@ class UserSerializer(serializers.ModelSerializer):
         """
         Validate email uniqueness.
         """
+        if self.instance and self.instance.email == value:
+         return value  # Allow unchanged email
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("This email is already in use.")
         return value
@@ -48,7 +58,7 @@ class CustomerSerializer(TimestampedSerializer):
         """
         Get total number of orders for the customer.
         """
-        return obj.get_total_orders()
+        return obj.orders.count()
 
     def create(self, validated_data: Dict[str, Any]) -> Customer:
         """
@@ -117,7 +127,7 @@ class OrderItemSerializer(TimestampedSerializer):
     """
     Serializer for order items with product details and subtotal calculation.
     """
-    product = ProductSerializer(read_only=True)
+    product = serializers.StringRelatedField(read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.filter(is_active=True),
         write_only=True,
@@ -186,23 +196,20 @@ class OrderSerializer(TimestampedSerializer):
         Create order with nested order items.
         """
         items_data = validated_data.pop('order_items')
-        order = Order.objects.create(**validated_data)
+        # Check stock availability before creating order
+        for item in items_data:
+            product, quantity = item['product'], item['quantity']
+            if product.stock < quantity:
+                raise serializers.ValidationError(
+                    f"Insufficient stock for {product.name} ({product.stock} available)."
+                )
 
+        order = Order.objects.create(**validated_data)
         for item_data in items_data:
             product = item_data['product']
-            quantity = item_data['quantity']
-            
-            # Check stock availability
-            if product.stock < quantity:
-                order.delete()
-                raise serializers.ValidationError(
-                    f"Insufficient stock for {product.name}"
-                )
-            
-            # Create order item and update stock
-            OrderItem.objects.create(order=order, **item_data)
-            product.stock -= quantity
+            product.stock -= item_data['quantity']
             product.save()
+            OrderItem.objects.create(order=order, **item_data)
 
         order.calculate_total()
         return order

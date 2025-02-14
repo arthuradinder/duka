@@ -1,0 +1,152 @@
+@baseUrl = http://127.0.0.1:8000/api
+@contentType = application/json
+@authToken = xxx
+
+### Get All Products
+GET {{baseUrl}}/products/
+Content-Type: {{contentType}}
+
+### Create a New Product
+POST {{baseUrl}}/products/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}
+
+{
+    "name": "Laptop",
+    "description": "High-performance laptop for developers.",
+    "price": 1200.99,
+    "category": 1,
+    "stock_quantity": 10
+}
+
+### Get a Single Product (Replace `1` with an actual product ID)
+GET {{baseUrl}}/products/1/
+Content-Type: {{contentType}}
+
+### Update a Product (Replace `1` with an actual product ID)
+PUT {{baseUrl}}/products/1/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}
+
+{
+    "name": "Updated Laptop",
+    "description": "Updated specs for better performance.",
+    "price": 1300.99,
+    "category": 1,
+    "stock_quantity": 8
+}
+
+### Partial Update a Product Stock Quantity
+PATCH {{baseUrl}}/products/1/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}
+
+{
+    "stock_quantity": 15
+}
+
+### Delete a Product (Replace `1` with an actual product ID)
+DELETE {{baseUrl}}/products/1/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}
+
+### Try to Create a Product Without Authentication
+POST {{baseUrl}}/products/
+Content-Type: {{contentType}}
+
+{
+    "name": "Tablet",
+    "description": "Portable tablet",
+    "price": 300.00,
+    "stock_quantity": 20
+}
+
+### Try to Update a Product Without Authentication
+PUT {{baseUrl}}/products/1/
+Content-Type: {{contentType}}
+
+{
+    "name": "Updated Tablet",
+    "price": 350.00
+}
+
+### Try to Delete a Product Without Authentication
+DELETE {{baseUrl}}/products/1/
+Content-Type: {{contentType}}
+
+---
+
+### **Categories API**
+### Get All Categories
+GET {{baseUrl}}/categories/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}
+
+### Create a New Category
+POST {{baseUrl}}/categories/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}
+
+{
+    "name": "Electronics",
+    "description": "Electronic gadgets and devices"
+}
+
+---
+
+### **Customers API**
+### Get All Customers
+GET {{baseUrl}}/customers/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}
+
+### Create a New Customer
+POST {{baseUrl}}/customers/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}
+
+{
+    "name": "John Doe",
+    "email": "johndoe@mail.com",
+    "phone": "+254712345678",
+    "address": "123 Street, Nairobi, Kenya"
+}
+
+---
+
+### **Orders API**
+### Get All Orders
+GET {{baseUrl}}/orders/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}
+
+### Create a New Order (Triggers Notification Service)
+POST {{baseUrl}}/orders/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}
+
+{
+    "customer": 1,
+    "order_date": "2025-02-13T10:30:00Z",
+    "status": "Pending",
+    "total_amount": 1200.99
+}
+
+### Get a Single Order (Replace `1` with an actual order ID)
+GET {{baseUrl}}/orders/1/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}
+
+### Update an Order Status (Triggers Notification Service)
+PATCH {{baseUrl}}/orders/1/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}
+
+{
+    "status": "Shipped"
+}
+
+### Delete an Order (Replace `1` with an actual order ID)
+DELETE {{baseUrl}}/orders/1/
+Content-Type: {{contentType}}
+Authorization: Token {{authToken}}

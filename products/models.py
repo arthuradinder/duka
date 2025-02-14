@@ -41,7 +41,7 @@ class Category(MPTTModel, TimestampedModel):
 
     def get_products_count(self):
         """Returns total number of products in this category and its subcategories."""
-        return self.products.count()
+        return Product.objects.filter(categories__in=self.get_descendants(include_self=True)).count()
 
 class Customer(TimestampedModel):
     """Customer model extending the User model."""
@@ -101,8 +101,13 @@ class Product(TimestampedModel):
             raise ValidationError('Stock cannot be negative')
 
     def save(self, *args, **kwargs):
-        self.full_clean()
+        if not self.pk:  # Only reduce stock on first save
+            if self.product.stock < self.quantity:
+             raise ValidationError(f"Not enough stock for {self.product.name}")
+            self.product.stock -= self.quantity
+            self.product.save()
         super().save(*args, **kwargs)
+        self.order.calculate_total()
 
     def is_in_stock(self):
         """Check if product is in stock."""
@@ -141,13 +146,13 @@ class Order(TimestampedModel):
         return f"Order {self.id} by {self.customer}"
 
     def calculate_total(self):
-        """Calculate total amount for the order."""
+        """Calculate total amount for the order and save it."""
         total = sum(
-            item.quantity * item.product.price
-            for item in self.order_items.all()
+            item.get_subtotal() for item in self.order_items.all()
         )
-        self.total_amount = total
-        self.save()
+        if self.total_amount != total:
+            self.total_amount = total
+            self.save()
 
 class OrderItem(TimestampedModel):
     """Individual items within an order."""
@@ -179,9 +184,7 @@ class OrderItem(TimestampedModel):
         return f"{self.quantity}x {self.product.name} in Order {self.order.id}"
 
     def save(self, *args, **kwargs):
-        # Set the price at time of order if not already set
-        if not self.price_at_time:
-            self.price_at_time = self.product.price
+        self.price_at_time = self.product.price  # Always store price history
         super().save(*args, **kwargs)
         # Update order total
         self.order.calculate_total()
